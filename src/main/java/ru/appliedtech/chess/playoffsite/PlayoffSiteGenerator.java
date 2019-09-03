@@ -76,13 +76,22 @@ public class PlayoffSiteGenerator {
         }
         Map<String, Object> model = new HashMap<>();
         model.put("matches", matches);
-        model.put("tournamentDescription", resolve(tournamentDescription, playerStorage.getPlayers()));
+        model.put("tournamentDescription", resolve(tournamentDescription, readKnownParticipants(playersFilePath)));
         try (Writer writer = new OutputStreamWriter(
                 new FileOutputStream(new File(outputDir, "index.html")),
                 StandardCharsets.UTF_8)) {
             Template template = configuration.getTemplate("index.ftl");
             template.process(model, writer);
         }
+    }
+
+    private List<Player> readKnownParticipants(String playersFilePath) throws IOException {
+        ObjectMapper baseMapper = new ChessBaseObjectMapper(emptyMap());
+        List<Player> players;
+        try (FileInputStream fis = new FileInputStream(playersFilePath)) {
+            players = baseMapper.readValue(fis, new TypeReference<ArrayList<Player>>() {});
+        }
+        return players;
     }
 
     private Map<String, String> resolve(TournamentDescription tournamentDescription, List<Player> registeredPlayers) {
